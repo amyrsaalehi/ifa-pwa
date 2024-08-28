@@ -2,8 +2,10 @@
 
 import { register } from "register-service-worker";
 
+let shouldUpdate = false;
+
 if (process.env.NODE_ENV === "production") {
-  register(`${process.env.BASE_URL}service-worker.js`, {
+  register(`service-worker.js`, {
     ready() {
       console.log(
         "App is being served from cache by a service worker.\n" +
@@ -18,9 +20,22 @@ if (process.env.NODE_ENV === "production") {
     },
     updatefound() {
       console.log("New content is downloading.");
+      if (
+        confirm(
+          "New content is downloading. Do you want to refresh the page?"
+        ) &&
+        !shouldUpdate
+      ) {
+        shouldUpdate = true;
+      }
     },
-    updated() {
+    updated(registration) {
       console.log("New content is available; please refresh.");
+      if (shouldUpdate) {
+        registration.unregister();
+        registration.update();
+        window.location.reload();
+      }
     },
     offline() {
       console.log(
